@@ -1,6 +1,6 @@
 {
-  "name": "ModHeader",
-  "version": "2.4.0",
+  "name": "KaolaHeader",
+  "version": "2.4.1",
   "manifest_version": 2,
   "homepage_url": "https://bewisse.com/modheader/",
   "description": "Modify request and response headers",

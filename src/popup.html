@@ -1,5 +1,7 @@
 <!doctype html>
+<html>
 <head>
+  <meta charset="utf-8" />
   <link href="styles/angular-material.min.css" rel="stylesheet" type="text/css">
   <link href="styles/style.css" rel="stylesheet" type="text/css">
   <meta name="viewport" content="initial-scale=1" />
@@ -7,7 +9,6 @@
   <script src="scripts/angular-animate.min.js"></script>
   <script src="scripts/angular-aria.min.js"></script>
   <script src="scripts/angular-material.min.js"></script>
-      <script src="scripts/associate.js"></script>
   <script src="scripts/main.js"></script>
 </head>
 <body ng-csp ng-app="modheader-popup" ng-controller="AppController">
@@ -50,6 +51,11 @@
         <md-icon md-svg-src="images/ic_play_arrow_18px.svg"></md-icon>
       </md-button>
 
+      <md-button class="md-icon-button" aria-label="Sync" md-no-ink
+        ng-click="dataSource.sync(dataSource.selectedProfile.headers)">
+        <md-icon md-svg-src="images/ic_cloud_download_18px.svg"></md-icon>
+      </md-button>
+
       <md-menu>
         <md-button class="md-icon-button" aria-label="Add" md-no-ink ng-click="$mdOpenMenu()">
           <md-icon md-svg-src="images/ic_add_18px.svg"></md-icon>
@@ -75,7 +81,7 @@
           </md-menu-item>
         </md-menu-content>
       </md-menu>
-      
+
       <md-menu>
         <md-button class="md-icon-button" aria-label="More" ng-click="$mdOpenMenu()">
           <md-icon md-svg-src="images/ic_more_vert_18px.svg"></md-icon>
@@ -129,7 +135,7 @@
       </md-button>
     </div>
     <div class="info-section" ng-show="dataSource.lockedTabId && !dataSource.isPaused">
-      Tab lock is active 
+      Tab lock is active
       <md-button aria-label="Tab" md-no-ink ng-click="dataSource.unlockAllTab()">
         <md-icon md-svg-src="images/ic_lock_open_18px.svg"></md-icon>
         Click to unlock tab
@@ -201,7 +207,7 @@
             Comment
             <span class="sortorder"
               ng-if="dataSource.predicate === 'comment'"
-              ng-class="{reverse: dataSource.reverse}">  
+              ng-class="{reverse: dataSource.reverse}">
             </span>
           </a>
         </span>
@@ -213,6 +219,7 @@
         class="header-row" layout="row">
         <md-checkbox ng-model="header.enabled" md-no-ink
           class="enable-checkbox"
+          ng-click="dataSource.toggleHeader(dataSource.selectedProfile.headers, header)"
           aria-label="Enabled"></md-checkbox>
         <md-autocomplete
           md-search-text="header.name"
@@ -359,3 +366,4 @@
     </div>
   </md-content>
 </body>
+</html>

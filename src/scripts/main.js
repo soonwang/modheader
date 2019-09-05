@@ -29,36 +29,60 @@ function fixProfile(profile) {
   }
 }
 
-function generateTipOfDay() {
-  const tips = [
-    {text: 'Tip: You can switch between multiple profile'},
-    {text: 'Tip: You can export your profile to share with others'},
-    {text: 'Tip: Tab lock will apply the modification only to locked tab'},
-    {text: 'Tip: Add filter will let you use regex to limit modification'},
-    {text: 'Tip: Use the checkbox to quickly toggle header modification'},
-    {text: 'Tip: Click on the column name to sort'},
-    {text: 'Tip: Add filter also allows you to filter by resource type'},
-    {text: 'Tip: Go to profile setting to toggle comment column'},
-    {text: 'Tip: Append header value to existing one in profile setting'},
-    {text: 'Tip: Pause button will temporarily pause all modifications'},
-    {text: 'Tip: Go to cloud backup to retrieve your auto-synced profile'},
-    {
-      text: 'If you like ModHeader, please consider donating',
-      buttonText: 'Donate',
-      url: 'https://www.paypal.com/pools/c/84aPpFIA0Z'
-    },
-    {
-      text: 'Enjoying ModHeader, leave us a review',
-      buttonText: 'Review',
-      url: navigator.userAgent.indexOf('Firefox') >= 0
-          ? 'https://addons.mozilla.org/firefox/addon/modheader-firefox/'
-          : 'https://chrome.google.com/webstore/detail/modheader/idgpnmonknjnojddfkpgkljpfnnfcklj'
-    },
-  ];
-  return tips[Math.floor(Math.random() * tips.length)];
+async function fetchKepTasks() {
+    const response = await fetch('http://kep-kl.netease.com/kep/api/work/data/search?source=relative&type=task&status=develop,measurement,test')
+    const json = await response.json();
+    return json.data.list.map(item => ({
+      id: item.id,
+      title: item.title
+    }));
 }
 
-modHeader.factory('dataSource', function($mdToast) {
+async function fetchRelatedTask(id, parentTaskId) {
+  const response = await fetch(`http://kep-kl.netease.com/kep/api/work/data/relate/list?id=${id}&type=task`);
+  const { data = {} } = await response.json();
+  // 如果当前任务是 不是父任务，则获取 父任务的关联任务
+  if (data.parentTask) {
+    return fetchRelatedTask(data.parentTask.id, data.parentTask.id);
+  }
+  if (data.task) {
+    const relatedIds = data.task.map(item => item.id);
+    if (parentTaskId) {
+      relatedIds.push(parentTaskId);
+    }
+    return relatedIds;
+  }
+  return [];
+}
+
+async function fetchTaskEnvName({ id, isRecursive = false }) {
+  const response = await fetch(`http://kep-kl.netease.com/kep/api/work/develop/env/detail?id=${id}`)
+  const json = await response.json();
+  if (json.data.name) {
+    return json.data.name
+  }
+  if (isRecursive) {
+    // 获取 关联的 任务id
+    const relatedIds = await fetchRelatedTask(id);
+    // 去重
+    const matchedId = relatedIds.findIndex(relatedId => relatedId == id);
+    if (matchedId >= 0) {
+      relatedIds.splice(matchedId, 1);
+    }
+    let taskName = '';
+    for(taskId of relatedIds) {
+      const name = await fetchTaskEnvName({ id: taskId, isRecursive: false });
+      if (name) {
+        taskName = name;
+        break;
+      }
+    }
+    return taskName;
+  }
+  return '';
+}
+
+modHeader.factory('dataSource', function($timeout, $mdToast) {
   var dataSource = {};
 
   var isExistingProfileTitle_ = function(title) {
@@ -69,6 +93,15 @@ modHeader.factory('dataSource', function($mdToast) {
     }
     return false;
   };
+
+  var emptyEntranceEnv = function(headers) {
+    const index = headers.findIndex(header => header.name === 'entranceEnv' || !header.name);
+    if (index < 0) {
+      return;
+    }
+    headers.splice(index, 1);
+    return emptyEntranceEnv(headers);
+  }
 
   dataSource.addFilter = function(filters) {
     let urlRegex = '';
@@ -82,6 +115,62 @@ modHeader.factory('dataSource', function($mdToast) {
       type: 'urls',
       urlRegex: urlRegex
     });
+  };
+
+  dataSource.sync = async function(headers) {
+    try {
+      const tasks = await fetchKepTasks();
+      if (tasks && tasks.length) {
+        // 清空 当前环境标
+        emptyEntranceEnv(headers);
+        ['stable_prejd','stable_masterjd'].forEach(value => {
+          headers.push({
+            enabled: false,
+            name: 'entranceEnv',
+            value,
+            comment: ''
+          })
+        })
+      }
+      tasks.forEach(async (task) => {
+        const taskName = await fetchTaskEnvName({
+          id: task.id,
+          isRecursive: true
+        });
+        if (taskName) {
+          $timeout(() => {
+            headers.push({
+              enabled: false,
+              name: 'entranceEnv',
+              value: taskName,
+              comment: task.title
+            })
+            dataSource.save();
+          }, 1)
+        }
+      });
+    } catch (err) {
+      $mdToast.show(
+        $mdToast.simple()
+          .content('请先登录KEP')
+          .position('bottom')
+          .hideDelay(3000)
+      );
+    }
+  };
+
+  dataSource.toggleHeader = function(headers, header) {
+    const headerEnabled = header.enabled;
+    const headerName = header.name;
+    headers.forEach(item => {
+      if (item.name === headerName) {
+        item.enabled = false;
+      }
+    });
+    header.enabled = !!headerEnabled;
+    $timeout(() => {
+      dataSource.save();
+    }, 1)
   };
 
   dataSource.addHeader = function(headers) {
@@ -236,7 +325,7 @@ modHeader.factory('dataSource', function($mdToast) {
 modHeader.factory('profileService', function(
     $timeout, $mdSidenav, $mdUtil, $mdDialog, $mdToast, dataSource) {
   var profileService = {};
-  
+
   var closeOptionsPanel_ = function() {
     $mdSidenav('left').close();
   };
@@ -588,18 +677,6 @@ modHeader.controller('AppController', function(
   $scope.dataSource = dataSource;
   $scope.profileService = profileService;
 
-  // If user dismiss tooltip too many times, then don't show again.
-  if (!localStorage.numTipDismiss || localStorage.numTipDismiss < 3) {
-    const tip = generateTipOfDay();
-    $mdToast.show({
-      position: 'bottom',
-      controller: 'ToastCtrl',
-      controllerAs: 'ctrl',
-      bindToController: true,
-      locals: {toastMessage: tip.text, buttonText: tip.buttonText, url: tip.url},
-      templateUrl: 'footer.tmpl.html'
-    });
-  }
 });
 
 
