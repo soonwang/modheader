@@ -325,6 +325,7 @@ function resetBadgeAndContextMenu() {
     browser.browserAction.setBadgeBackgroundColor({color: '#666'});
   } else {
     const numHeaders = (currentProfile.headers.length + currentProfile.respHeaders.length);
+    const entranceEnvHeader = currentProfile.headers.find(item => item.name === 'entranceEnv');
     if (numHeaders == 0) {
       browser.browserAction.setBadgeText({text: ''});
       browser.browserAction.setIcon({path: 'icon_bw.png'});
@@ -333,6 +334,11 @@ function resetBadgeAndContextMenu() {
       browser.browserAction.setIcon({path: 'icon_bw.png'});
       browser.browserAction.setBadgeText({text: '\uD83D\uDD12'});
       browser.browserAction.setBadgeBackgroundColor({color: '#ff8e8e'});
+    } else if(entranceEnvHeader && entranceEnvHeader.value) {
+      const entranceEnvValue = entranceEnvHeader.value.replace(/(kta|jdb2|stable_|jd)/ig, '');
+      browser.browserAction.setIcon({path: 'icon.png'});
+      browser.browserAction.setBadgeText({text: entranceEnvValue.slice(-4)});
+      browser.browserAction.setBadgeBackgroundColor({color: '#db4343'});
     } else {
       browser.browserAction.setIcon({path: 'icon.png'});
       browser.browserAction.setBadgeText({text: numHeaders.toString()});
