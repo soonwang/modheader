@@ -258,7 +258,7 @@ modHeader.factory('dataSource', function($timeout, $mdToast) {
     }
     const profile = {
         title: 'Profile ' + index,
-        hideComment: true,
+        hideComment: false,
         headers: [],
         respHeaders: [],
         filters: [],
