@@ -30,7 +30,7 @@ function fixProfile(profile) {
 }
 
 async function fetchKepTasks() {
-    const response = await fetch('http://kep-kl.netease.com/kep/api/work/data/search?source=relative&type=task&status=develop,measurement,test')
+    const response = await fetch('http://kep-kl.netease.com/kep/api/work/data/search?source=relative&type=task&status=develop,measurement,test&currentPage=1&pageSize=100')
     const json = await response.json();
     return json.data.list.map(item => ({
       id: item.id,
