@@ -335,7 +335,7 @@ function resetBadgeAndContextMenu() {
       browser.browserAction.setBadgeText({text: '\uD83D\uDD12'});
       browser.browserAction.setBadgeBackgroundColor({color: '#ff8e8e'});
     } else if(entranceEnvHeader && entranceEnvHeader.value) {
-      const entranceEnvValue = entranceEnvHeader.value.replace(/(kta|jdb2|stable_|jd)/ig, '');
+      const entranceEnvValue = entranceEnvHeader.value.replace(/(kta|kre|jdb2|stable_|jd)/ig, '');
       browser.browserAction.setIcon({path: 'icon.png'});
       browser.browserAction.setBadgeText({text: entranceEnvValue.slice(-4)});
       browser.browserAction.setBadgeBackgroundColor({color: '#db4343'});

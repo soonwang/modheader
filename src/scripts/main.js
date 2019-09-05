@@ -29,13 +29,43 @@ function fixProfile(profile) {
   }
 }
 
-async function fetchKepTasks() {
-    const response = await fetch('http://kep-kl.netease.com/kep/api/work/data/search?source=relative&type=task&status=develop,measurement,test&currentPage=1&pageSize=100')
+function toQueryString(obj) {
+  let keys = obj && Object.keys(obj);
+  let params;
+  if (keys && keys.length > 0) {
+      params = keys.map(key => `${key}=${obj[key]}`).join('&');
+  }
+  return params;
+}
+
+async function fetchKepTasks(currentPage = 1, taskList = []) {
+    const pageSize = 20;
+    const response = await fetch('http://kep-kl.netease.com/kep/api/work/data/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: toQueryString({
+        source: 'relative',
+        type: 'task',
+        currentPage,
+        pageSize,
+        status: 'develop,measurement,test,testFinish,integrate'
+      })
+    })
     const json = await response.json();
-    return json.data.list.map(item => ({
+
+    const list = json.data.list.map(item => ({
       id: item.id,
       title: item.title
     }));
+    taskList = taskList.concat(list);
+
+    if (list.length < pageSize) {
+      return taskList;
+    }
+    return fetchKepTasks(currentPage + 1, taskList);
 }
 
 async function fetchRelatedTask(id, parentTaskId) {
@@ -150,12 +180,15 @@ modHeader.factory('dataSource', function($timeout, $mdToast) {
         }
       });
     } catch (err) {
-      $mdToast.show(
-        $mdToast.simple()
-          .content('请先登录KEP')
-          .position('bottom')
-          .hideDelay(3000)
-      );
+      $mdToast.show({
+        position: 'bottom',
+        controller: 'ToastCtrl',
+        controllerAs: 'ctrl',
+        bindToController: true,
+        locals: {toastMessage: '请先登录KEP', buttonText: '前往登录', url: 'http://kep-kl.netease.com/'},
+        templateUrl: 'footer.tmpl.html',
+        hideDelay: 0
+      });
     }
   };
 
