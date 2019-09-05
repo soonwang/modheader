@@ -1,6 +1,6 @@
 {
   "name": "KaolaHeader",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "manifest_version": 2,
   "homepage_url": "https://github.com/soonwang/modheader",
   "description": "Modify request and response headers",
