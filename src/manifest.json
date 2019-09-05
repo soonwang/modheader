@@ -1,8 +1,8 @@
 {
   "name": "KaolaHeader",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "manifest_version": 2,
-  "homepage_url": "https://bewisse.com/modheader/",
+  "homepage_url": "https://github.com/soonwang/modheader",
   "description": "Modify request and response headers",
   "background":  {
     "scripts": [ "background.js" ]
