@@ -149,13 +149,16 @@ modHeader.factory('dataSource', function($timeout, $mdToast) {
 
   dataSource.sync = async function(headers) {
     try {
+      // 记录当前 环境名
+      const currentEntranceHeader = headers.find(item => item.enabled && item.name === 'entranceEnv') || {};
+      const currentEntranceEnvName = currentEntranceHeader.value || '';
       const tasks = await fetchKepTasks();
       if (tasks && tasks.length) {
         // 清空 当前环境标
         emptyEntranceEnv(headers);
         ['stable_prejd','stable_masterjd'].forEach(value => {
           headers.push({
-            enabled: false,
+            enabled: value === currentEntranceEnvName,
             name: 'entranceEnv',
             value,
             comment: ''
@@ -170,7 +173,7 @@ modHeader.factory('dataSource', function($timeout, $mdToast) {
         if (taskName) {
           $timeout(() => {
             headers.push({
-              enabled: false,
+              enabled: taskName === currentEntranceEnvName,
               name: 'entranceEnv',
               value: taskName,
               comment: task.title
