@@ -54,12 +54,12 @@ body::-webkit-scrollbar {
 .name-input {
 	display: inline-block;
 	margin-left: 20px;
-	width: 190px;
+	width: 150px;
 }
 
 .value-input {
 	display: inline-block;
-	width: 188px;
+	width: 150px;
 }
 
 .comment-input {
@@ -132,7 +132,14 @@ md-select.filter-type {
   padding: 2px;
 }
 
+md-autocomplete.name-autocomplete {
+  min-width: 150px;
+  width: 150px;
+}
+md-autocomplete.value-autocomplete {
+  min-width: 150px;
+  max-width: 150px;
+}
 md-autocomplete.comment-autocomplete {
-  min-width: 140px;
-  width: 140px;
+  width: 240px;
 }

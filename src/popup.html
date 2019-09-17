@@ -231,7 +231,8 @@
           header.name)"
           md-item-text="item"
           md-autoselect="true"
-          md-floating-label="Name">
+          md-floating-label="Name"
+          class="name-autocomplete">
           <md-item-template>
             <span md-highlight-text="header.name">{{item}}</span>
           </md-item-template>
@@ -247,6 +248,7 @@
           md-item-text="item"
           md-autoselect="true"
           md-floating-label="Value"
+          class="value-autocomplete"
           flex>
           <md-item-template>
             <span md-highlight-text="header.value">{{item}}</span>
